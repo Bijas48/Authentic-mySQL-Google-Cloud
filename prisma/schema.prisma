@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
+
+  Pemasukans   Pemasukan[]
+  Pengeluarans Pengeluaran[]
+  Laporans     Laporan[]
+}
+
+model Pemasukan {
+  idTransaksiPemasukan Int      @id @default(autoincrement())
+  idUser               Int
+  jumlah               Float
+  deskripsi            String
+  tanggal              DateTime
+  kategori             String
+  sumber               String
+
+  user    User     @relation(fields: [idUser], references: [id])
+  Laporan Laporan?
+}
+
+model Pengeluaran {
+  idTransaksiPengeluaran Int      @id @default(autoincrement())
+  idUser                 Int
+  jumlah                 Float
+  deskripsi              String
+  tanggal                DateTime
+  kategori               String
+  sumber                 String
+  lampiran               String?
+
+  user    User     @relation(fields: [idUser], references: [id])
+  Laporan Laporan?
+}
+
+model Laporan {
+  idLaporan              Int      @id @default(autoincrement())
+  idUser                 Int
+  idTransaksiPengeluaran Int?     @unique
+  idTransaksiPemasukan   Int?     @unique
+  keterangan             String
+  tanggal                DateTime
+
+  user        User         @relation(fields: [idUser], references: [id])
+  pemasukan   Pemasukan?   @relation(fields: [idTransaksiPemasukan], references: [idTransaksiPemasukan])
+  pengeluaran Pengeluaran? @relation(fields: [idTransaksiPengeluaran], references: [idTransaksiPengeluaran])
+}
