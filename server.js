@@ -34,14 +34,37 @@ app.put("/", (req, res) => {
   res.send(users);
 });
 
-//Futir
+//Fitur CRUD mysql Testing
 app.post("/users", async (req, res) => {
   const { username, email, password } = req.body;
   try {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          {
+            username: {
+              equals: username,
+            },
+          },
+          {
+            email: {
+              equals: email,
+            },
+          },
+        ],
+      },
+    });
+
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Username or email already exists" });
+    }
+
     const result = await prisma.user.create({
       data: { username, email, password },
     });
-    res.status(200).json({ message: "user created in database" });
+    res.status(200).json({ message: "User created in database" });
   } catch (error) {
     res.status(500).json({ error: "Error creating user: " + error.message });
   }
