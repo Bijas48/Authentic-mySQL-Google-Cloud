@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
+  id       String @id @default(uuid())
   username String @unique
   email    String @unique
   password String
@@ -25,8 +25,8 @@ model User {
 }
 
 model Pemasukan {
-  idTransaksiPemasukan Int      @id @default(autoincrement())
-  idUser               Int
+  idTransaksiPemasukan String   @id @default(uuid())
+  idUser               String
   jumlah               Float
   deskripsi            String
   tanggal              DateTime
@@ -38,8 +38,8 @@ model Pemasukan {
 }
 
 model Pengeluaran {
-  idTransaksiPengeluaran Int      @id @default(autoincrement())
-  idUser                 Int
+  idTransaksiPengeluaran String   @id @default(uuid())
+  idUser                 String
   jumlah                 Float
   deskripsi              String
   tanggal                DateTime
@@ -52,10 +52,10 @@ model Pengeluaran {
 }
 
 model Laporan {
-  idLaporan              Int      @id @default(autoincrement())
-  idUser                 Int
-  idTransaksiPengeluaran Int?     @unique
-  idTransaksiPemasukan   Int?     @unique
+  idLaporan              String   @id @default(uuid())
+  idUser                 String
+  idTransaksiPengeluaran String?  @unique
+  idTransaksiPemasukan   String?  @unique
   keterangan             String
   tanggal                DateTime
 
