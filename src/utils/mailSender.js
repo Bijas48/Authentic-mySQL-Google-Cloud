@@ -1,10 +1,5 @@
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
-const generateOTP = require("./otp");
-
-// Configure mailgen by setting a theme and your product info
-let name = "testing";
-var otp = generateOTP();
 
 const mailGenerator = new Mailgen({
   theme: "default",
@@ -14,24 +9,6 @@ const mailGenerator = new Mailgen({
   },
 });
 
-const emailTemplate = {
-  body: {
-    name: `Hello ${name}`,
-    intro: "Welcome to FinancyQ.",
-    action: {
-      instructions: "Please input this OTP code number:",
-      button: {
-        color: "#22BC66", // Color of the button
-        text: `${otp}`, // Text of the button
-      },
-    },
-    outro:
-      "Need help, or have questions? Just reply to this email, we'd love to help.",
-  },
-};
-
-//batasan
-
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -40,33 +17,32 @@ var transporter = nodemailer.createTransport({
   },
 });
 
-// var mailOptions = {
-//   from: process.env.EMAIL, //ini kedetect
-//   to: "bijaske2@gmail.com",
-//   subject: "Sending Email using Node.js",
-//   text: "That was easy ya kan!",
-//   html: "<b>Hello world?</b>",
-// };
-
-// transporter.sendMail(mailOptions, function (error, info) {
-//   if (error) {
-//     console.log(error);
-//   } else {
-//     console.log("Email sent: " + info.response);
-//     console.log(nodemailer.getTestMessageUrl(mailOptions));
-//   }
-// });
-
-async function sendMailWithTemplate(email) {
+async function sendingmail(email, otp) {
   try {
+    const emailTemplate = {
+      body: {
+        name: `Hello User`,
+        intro: "Welcome to FinancyQ.",
+        action: {
+          instructions: "Please input this OTP code number:",
+          button: {
+            color: "#22BC66", // Color of the button
+            text: `${otp}`, // Text of the button
+          },
+        },
+        outro:
+          "Need help, or have questions? Just reply to this email, we'd love to help.",
+      },
+    };
+
     // Generate an HTML email with the provided template
     const emailBody = mailGenerator.generate(emailTemplate);
 
     // Mail options
     const mailOptions = {
-      from: process.env.EMAIL,
+      from: "financyqworkspace@gmail.com",
       to: email,
-      subject: "Welcome to FinancyQ",
+      subject: "Your OTP Code",
       html: emailBody,
     };
 
@@ -79,6 +55,4 @@ async function sendMailWithTemplate(email) {
   }
 }
 
-// Tetsing
-const recipientEmail = "bijaske2@gmail.com";
-sendMailWithTemplate(recipientEmail);
+module.exports = { sendingmail };

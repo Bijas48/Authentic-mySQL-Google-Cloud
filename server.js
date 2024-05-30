@@ -2,10 +2,11 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const { PrismaClient } = require("@prisma/client");
-const nodemailer = require("nodemailer");
 
 app.use(express.json());
 const prisma = new PrismaClient();
+
+const { singup, sendotp } = require("./src/controllers/authRoutes");
 
 // //Testing local
 // let users = [];
@@ -146,7 +147,7 @@ app.delete("/users/:username", async (req, res) => {
   }
 });
 
-app.delete("/users/all", async (req, res) => {
+app.delete("/users/", async (req, res) => {
   try {
     await prisma.user.deleteMany(); // Delete all users
     res.status(200).json({ message: "All users deleted from database" });
@@ -163,13 +164,12 @@ app.get("/", (req, res) => {
   res.send("Homepage");
 });
 
-app.get("/login", (req, res) => {
+app.post("/login", (req, res) => {
   res.send("this is login");
 });
 
-app.get("/register", (req, res) => {
-  res.send("Welcome to Register");
-});
+app.post("/signup", singup);
+app.post("/sendotp", sendotp);
 
 // batas
 app.use((req, res, next) => {
@@ -177,36 +177,6 @@ app.use((req, res, next) => {
 });
 
 // Batas BBGT Nyoba Kirim NodeMailer
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false, // Use `true` for port 465, `false` for all other ports
-  auth: {
-    user: "maddison53@ethereal.email",
-    pass: "jn7jnAPss4f63QBp6D",
-  },
-});
-
-// Rute untuk mengirim email
-app.get("/register/sendmail", async (req, res) => {
-  try {
-    // Kirim email dengan transporter yang telah dibuat
-    const info = await transporter.sendMail({
-      from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>', // alamat pengirim
-      to: "bar@example.com, baz@example.com", // daftar penerima
-      subject: "Hello ✔", // subjek email
-      text: "Hello world?", // isi email plain text
-      html: "<b>Hello world?</b>", // isi email dalam format HTML
-    });
-
-    console.log("Message sent: %s", info.messageId);
-    res.send("Email telah berhasil dikirim");
-  } catch (error) {
-    console.error("Error occurred:", error);
-    res.status(500).send("Terjadi kesalahan dalam mengirim email");
-  }
-});
 
 app.listen(port, () => {
   console.log(`FinancyQ listening on "http://localhost:${port}"`);
