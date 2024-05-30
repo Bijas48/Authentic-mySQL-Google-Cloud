@@ -2,11 +2,12 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const { PrismaClient } = require("@prisma/client");
+const sessionMiddleware = require("./src/middlewares/session");
+const { singup, verifyotp } = require("./src/controllers/authRoutes");
 
 app.use(express.json());
+app.use(sessionMiddleware);
 const prisma = new PrismaClient();
-
-const { singup, sendotp } = require("./src/controllers/authRoutes");
 
 // //Testing local
 // let users = [];
@@ -169,7 +170,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/signup", singup);
-app.post("/sendotp", sendotp);
+app.post("/verifyotp", verifyotp);
 
 // batas
 app.use((req, res, next) => {

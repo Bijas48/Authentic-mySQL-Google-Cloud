@@ -8,12 +8,12 @@ app.use(express.json());
 
 const prisma = new PrismaClient();
 
-const singup = async (req, res) => {
-  const { username, email, password, otp } = req.body;
+exports.singup = async (req, res) => {
+  const { username, email, password } = req.body;
 
   try {
     // Validasi input
-    if (!username || !email || !password || !otp) {
+    if (!username || !email || !password) {
       return res.status(403).send({
         success: false,
         message: "All fields are required",
@@ -45,15 +45,42 @@ const singup = async (req, res) => {
       });
     }
 
-    // Verifikasi OTP
+    const otp = generateOTP();
+
+    await prisma.oTP.create({
+      data: { email, otp },
+    });
+
+    await sendingmail(email, otp);
+
+    req.session.tempUserData = { username, email, password };
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully, please check your email",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error during registration: " + error.message,
+    });
+  }
+};
+
+exports.verifyotp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    if (!email || !otp) {
+      return res.status(403).send({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
     const otpEntry = await prisma.oTP.findFirst({
-      where: {
-        email,
-        otp,
-      },
-      orderBy: {
-        createdAt: "desc", // Mengambil OTP terbaru
-      },
+      where: { email, otp },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!otpEntry) {
@@ -63,7 +90,6 @@ const singup = async (req, res) => {
       });
     }
 
-    // Periksa apakah OTP telah kadaluwarsa (5 menit)
     const expirationTime = new Date(
       otpEntry.createdAt.getTime() + 5 * 60 * 1000
     );
@@ -74,15 +100,15 @@ const singup = async (req, res) => {
       });
     }
 
-    // Buat pengguna baru
+    const { username, password } = req.session.tempUserData;
+
     const newUser = await prisma.user.create({
       data: { username, email, password },
     });
 
-    // Hapus OTP setelah berhasil digunakan
-    await prisma.oTP.delete({
-      where: { id: otpEntry.id },
-    });
+    await prisma.oTP.delete({ where: { id: otpEntry.id } });
+
+    delete req.session.tempUserData;
 
     res.status(200).json({
       success: true,
@@ -96,36 +122,3 @@ const singup = async (req, res) => {
     });
   }
 };
-
-const sendotp = async (req, res) => {
-  const { email } = req.body;
-  try {
-    if (!email) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email is required" });
-    }
-
-    // Generate OTP
-    const otp = generateOTP();
-
-    // Simpan OTP ke database
-    await prisma.oTP.create({
-      data: {
-        email,
-        otp,
-      },
-    });
-
-    await sendingmail(email, otp);
-
-    res.status(200).json({ success: true, message: "OTP sent successfully" });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error generating OTP: " + error.message,
-    });
-  }
-};
-
-module.exports = { singup, sendotp };
