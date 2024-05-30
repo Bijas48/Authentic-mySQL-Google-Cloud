@@ -1,10 +1,6 @@
-const express = require("express");
-const app = express();
 const { PrismaClient } = require("@prisma/client");
 const generateOTP = require("../utils/otp");
 const { sendingmail } = require("../utils/mailSender");
-
-app.use(express.json());
 
 const prisma = new PrismaClient();
 
@@ -12,7 +8,6 @@ exports.singup = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    // Validasi input
     if (!username || !email || !password) {
       return res.status(403).send({
         success: false,
@@ -20,21 +15,9 @@ exports.singup = async (req, res) => {
       });
     }
 
-    // Cek apakah pengguna sudah ada
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          {
-            username: {
-              equals: username,
-            },
-          },
-          {
-            email: {
-              equals: email,
-            },
-          },
-        ],
+        OR: [{ username: { equals: username } }, { email: { equals: email } }],
       },
     });
 

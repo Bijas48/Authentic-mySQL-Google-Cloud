@@ -1,18 +1,19 @@
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
+require("dotenv").config();
 
 const mailGenerator = new Mailgen({
   theme: "default",
   product: {
     name: "FinancyQ - Kata Kata Hari ini",
-    link: "https://mailgen.js/",
+    link: "https://mailgen.js/", //
   },
 });
 
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "financyqworkspace@gmail.com",
+    user: "financyqworkspace@",
     pass: "cymi ejxi vmcw vkag",
   },
 });
