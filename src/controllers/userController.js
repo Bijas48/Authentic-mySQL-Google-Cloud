@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
 
 const prisma = new PrismaClient();
 
@@ -42,7 +43,9 @@ exports.createUser = async (req, res) => {
         .json({ error: "Username or email already exists" });
     }
 
-    await prisma.user.create({ data: { username, email, password } });
+    const result = await prisma.user.create({
+      data: { username, email, password },
+    });
     res.status(200).json({ message: "User created in database" });
   } catch (error) {
     res.status(500).json({ error: "Error creating user: " + error.message });
@@ -52,11 +55,27 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const username = req.params.username;
   const { username: newUsername, password } = req.body;
+
   try {
+    // Check for username availability before update (optional)
+    if (newUsername && newUsername !== username) {
+      const existingUser = await prisma.user.findUnique({
+        where: { username: newUsername },
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+    }
+
+    // Encrypt password before update (using bcrypt from your other code)
+    const hashedPassword = await bcrypt.hash(password, 10); // Adjust cost factor as needed
+
     const user = await prisma.user.update({
       where: { username },
-      data: { username: newUsername, password },
+      data: { username: newUsername || username, password: hashedPassword }, // Update only username or both
     });
+
     res.status(200).json({ message: "User updated in database" });
   } catch (error) {
     if (error.code === "P2025") {
@@ -70,7 +89,11 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   const username = req.params.username;
   try {
-    await prisma.user.delete({ where: { username } });
+    const user = await prisma.user.delete({
+      where: {
+        username: username,
+      },
+    });
     res.status(200).json({ message: "User deleted from database" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting user: " + error.message });
@@ -79,7 +102,7 @@ exports.deleteUser = async (req, res) => {
 
 exports.deleteAllUsers = async (req, res) => {
   try {
-    await prisma.user.deleteMany();
+    await prisma.user.deleteMany(); // Delete all users
     res.status(200).json({ message: "All users deleted from database" });
   } catch (error) {
     res

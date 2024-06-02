@@ -1,5 +1,12 @@
 const express = require("express");
 const {
+  signup,
+  verifyOtp,
+  login,
+  refreshToken,
+  logout,
+} = require("../controllers/authController");
+const {
   getUsers,
   getUserByUsername,
   createUser,
@@ -7,18 +14,21 @@ const {
   deleteUser,
   deleteAllUsers,
 } = require("../controllers/userController");
-const { singup, verifyotp } = require("../controllers/authController");
+const authenticateToken = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.get("/users/", getUsers);
-router.get("/users/:username", getUserByUsername);
-router.post("/users/", createUser);
-router.put("/users/:username", updateUser);
-router.delete("/users/:username", deleteUser);
-router.delete("/users/", deleteAllUsers);
+router.get("/users/", authenticateToken, getUsers);
+router.get("/users/:username", authenticateToken, getUserByUsername);
+router.post("/users/", authenticateToken, createUser);
+router.put("/users/:username", authenticateToken, updateUser);
+router.delete("/users/:username", authenticateToken, deleteUser);
+router.delete("/users/", authenticateToken, deleteAllUsers);
 
-router.post("/signup", singup);
-router.post("/verifyotp", verifyotp);
+router.post("/signup", signup);
+router.post("/verifyotp", verifyOtp);
+router.post("/login", login);
+router.post("/token", refreshToken);
+router.post("/logout", logout);
 
 module.exports = router;
