@@ -195,12 +195,18 @@ exports.logout = async (req, res) => {
   const { token } = req.body;
 
   try {
-    await prisma.user.updateMany({
+    const user = await prisma.user.updateMany({
       where: { refreshToken: token },
       data: { refreshToken: null },
     });
 
-    res.sendStatus(204).json({ message: "You Logged Out" });
+    if (user.count === 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid token or user already logged out" });
+    }
+
+    res.sendStatus(204);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

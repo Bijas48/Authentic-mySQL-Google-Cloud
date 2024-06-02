@@ -57,7 +57,8 @@ exports.updateUser = async (req, res) => {
   const { username: newUsername, password } = req.body;
 
   try {
-    // Check for username availability before update (optional)
+    const updateData = {};
+
     if (newUsername && newUsername !== username) {
       const existingUser = await prisma.user.findUnique({
         where: { username: newUsername },
@@ -66,14 +67,22 @@ exports.updateUser = async (req, res) => {
       if (existingUser) {
         return res.status(400).json({ error: "Username already exists" });
       }
+
+      updateData.username = newUsername;
     }
 
-    // Encrypt password before update (using bcrypt from your other code)
-    const hashedPassword = await bcrypt.hash(password, 10); // Adjust cost factor as needed
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateData.password = hashedPassword;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
 
     const user = await prisma.user.update({
       where: { username },
-      data: { username: newUsername || username, password: hashedPassword }, // Update only username or both
+      data: updateData,
     });
 
     res.status(200).json({ message: "User updated in database" });
